@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, GraduationCap, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 
 interface HeaderProps {
   cmsPages?: { title: string; slug: string }[]
@@ -17,7 +18,7 @@ const navLinks = [
   {
     label: 'Unsere Schule',
     children: [
-      { href: '/unsere-schule', label: 'Über uns' },
+      { href: '/unsere-schule', label: 'Ãber uns' },
       { href: '/schulleben', label: 'Schulleben' },
       { href: '/ogs', label: 'OGS' },
     ],
@@ -69,11 +70,9 @@ export default function Header({ cmsPages = [] }: HeaderProps) {
             style={{ color: 'var(--color-primary-dark)' }}
           >
             <div
-              className="flex items-center justify-center w-9 h-9 rounded-lg"
-              style={{ background: 'var(--color-primary)' }}
-              aria-hidden
+              className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
             >
-              < GraduationCap className="h-5 w-5 text-white" />
+              <Image src="/school-logo.png" alt="GS Wehringhausen" fill className="object-contain" />
             </div>
             <span className="hidden sm:block leading-tight">
               GS Wehringhausen
@@ -156,7 +155,7 @@ export default function Header({ cmsPages = [] }: HeaderProps) {
           <button
             className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? 'Menü schließen' : 'Menü öffnen'}
+            aria-label={mobileOpen ? 'MenÃ¼ schlieÃen' : 'MenÃ¼ Ã¶ffnen'}
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
