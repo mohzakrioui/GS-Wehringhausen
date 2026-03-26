@@ -21,21 +21,11 @@ import { SickReports } from './collections/SickReports'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const useS3 = Boolean(
-  process.env.S3_BUCKET &&
-  process.env.S3_ACCESS_KEY_ID &&
-  process.env.S3_SECRET_ACCESS_KEY &&
-  process.env.S3_ENDPOINT,
-)
+const connectionString = process.env.DATABASE_URI || process.env.POSTGRES_URL || ''
 
 export default buildConfig({
   admin: {
     user: Users.slug,
-    meta: {
-      titleSuffix: '– GS Wehringhausen Admin',
-      icons: [{ rel: 'icon', url: '/favicon.ico' }],
-    },
-    components: {},
   },
   collections: [
     Users,
@@ -48,62 +38,53 @@ export default buildConfig({
     ContactSubmissions,
     SickReports,
   ],
-  editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || 'dev-secret',
+  editor: lexicalEditor({}),
+  secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI,
+      connectionString,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      max: 5,
+      idleTimeoutMillis: 20000,
+      connectionTimeoutMillis: 30000,
     },
   }),
-  email: process.env.SMTP_HOST
-    ? nodemailerAdapter({
-        defaultFromAddress: process.env.SMTP_FROM || 'noreply@gswehringhausen.de',
-        defaultFromName: 'GS Wehringhausen',
-        transportOptions: {
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT) || 587,
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        },
-      })
-    : undefined,
+  sharp,
+  email: nodemailerAdapter({
+    defaultFromAddress: process.env.EMAIL_FROM || 'noreply@gs-wehringhausen.de',
+    defaultFromName: 'GS Wehringhausen',
+    transportOptions: {
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      auth: {
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',
+      },
+    },
+  }),
   plugins: [
     seoPlugin({
-      generateTitle: ({ doc }) => `${doc?.title} | GS Wehringhausen`,
-      generateDescription: ({ doc }) => (doc?.excerpt ? String(doc.excerpt) : ''),
+      collections: ['pages', 'news-articles'],
+      uploadsCollection: 'media',
+      generateTitle: ({ doc }: any) => doc?.title?.value || 'GS Wehringhausen',
+      generateDescription: ({ doc }: any) => doc?.excerpt?.value || '',
     }),
-    ...(useS3
-      ? [
-          s3Storage({
-            collections: {
-              media: true,
-            },
-            bucket: process.env.S3_BUCKET || '',
-            config: {
-              endpoint: process.env.S3_ENDPOINT,
-              region: process.env.S3_REGION || 'auto',
-              credentials: {
-                accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-                secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-              },
-            },
-          }),
-        ]
-      : []),
+    s3Storage({
+      collections: {
+        media: true,
+      },
+      bucket: process.env.S3_BUCKET || '',
+      config: {
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        },
+        region: process.env.S3_REGION || 'eu-central-1',
+        endpoint: process.env.S3_ENDPOINT,
+      },
+    }),
   ],
-  upload: {
-    limits: {
-      fileSize: 10_000_000, // 10 MB
-    },
-  },
-  localization: {
-    locales: [{ label: 'Deutsch', code: 'de' }],
-    defaultLocale: 'de',
-  },
-  sharp,
 })
