@@ -7,6 +7,8 @@ import { Nunito } from 'next/font/google'
 import { getPayloadClient } from '../../lib/payload'
 import { unstable_cache } from 'next/cache'
 
+export const dynamic = 'force-dynamic'
+
 const nunito = Nunito({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
@@ -33,9 +35,14 @@ const getMenuPages = unstable_cache(
   { revalidate: 3600, tags: ['pages'] }
 )
 
-// Async server component — resolves CMS pages without blocking the layout stream
+// Async server component - resolves CMS pages without blocking the layout stream
 async function HeaderWithCmsPages() {
-  const pages = await getMenuPages()
+  let pages: any[] = []
+  try {
+    pages = await getMenuPages()
+  } catch (err) {
+    console.warn('HeaderWithCmsPages: DB not available', err)
+  }
   const menuPages = (pages as any[]).filter(
     (p) => !['impressum', 'datenschutz', 'cookies'].includes(p.slug)
   )
