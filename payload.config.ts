@@ -21,7 +21,7 @@ import { SickReports } from './collections/SickReports'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const connectionString = process.env.DATABASE_URI || process.env.POSTGRES_URL || ''
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URI || ''
 
 export default buildConfig({
   admin: {
