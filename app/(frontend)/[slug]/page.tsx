@@ -32,18 +32,22 @@ const getPageData = unstable_cache(
 )
 
 export async function generateStaticParams() {
-  const payload = await getPayloadClient()
-  const pages = await payload.find({
-    collection: 'pages',
-    limit: 100,
-    select: {
-      slug: true,
-    },
-  })
-
-  return pages.docs.map((page: any) => ({
-    slug: page.slug,
-  }))
+  try {
+    const payload = await getPayloadClient()
+    const pages = await payload.find({
+      collection: 'pages',
+      limit: 100,
+      select: {
+        slug: true,
+      },
+    })
+    return pages.docs.map((page: any) => ({
+      slug: page.slug,
+    }))
+  } catch (err) {
+    console.warn('generateStaticParams: DB not available during build', err)
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -96,7 +100,7 @@ export default async function DynamicPage({ params }: PageProps) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 text-sm truncate">{item.label}</p>
                     <p className="text-xs text-gray-500 uppercase">
-                      {item.file.filename.split('.').pop()} · {(item.file.filesize / 1024 / 1024).toFixed(2)} MB
+                      {item.file.filename.split('.').pop()} Â· {(item.file.filesize / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
                 </Link>
