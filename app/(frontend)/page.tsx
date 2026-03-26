@@ -32,8 +32,18 @@ const getHomeData = unstable_cache(
   { revalidate: 60, tags: ['news-articles', 'events'] }
 )
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
-  const { articles: articlesResult, events: eventsResult } = await getHomeData()
+  let articlesResult: any[] = []
+  let eventsResult: any[] = []
+  try {
+    const data = await getHomeData()
+    articlesResult = data.articles
+    eventsResult = data.events
+  } catch (err) {
+    console.warn('HomePage: DB not available', err)
+  }
 
   return (
     <>
