@@ -5,7 +5,7 @@
   "engines": { "node": "20.x" },
   "scripts": {
     "dev": "next dev",
-    "build": "npx payload migrate:create || true && npx payload migrate && next build",
+    "build": "drizzle-kit push && next build",
     "start": "next start",
     "lint": "eslint",
     "generate:types": "payload generate:types",
