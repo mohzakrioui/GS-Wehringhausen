@@ -5,13 +5,13 @@
     "engines": { "node": "20.x" },
   "scripts": {
     "dev": "next dev",
-        "build": "next build",
-    "start": "next start",
+    "build": "drizzle-kit push:pg && next build",    "start": "next start",
     "lint": "eslint",
     "generate:types": "payload generate:types",
     "payload": "payload"
   },
   "dependencies": {
+        "drizzle-kit": "^0.20.0",
     "@fullcalendar/core": "^6.1.20",
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
