@@ -21,33 +21,24 @@ import { SickReports } from './collections/SickReports'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URI || ''
+// Prefer non-pooling URL for migrations/initialization (avoids PgBouncer auth issues)
+const connectionString =
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URI ||
+  ''
 
 export default buildConfig({
-  admin: {
-    user: Users.slug,
-  },
-  collections: [
-    Users,
-    Media,
-    NewsArticles,
-    Events,
-    GalleryAlbums,
-    Pages,
-    Staff,
-    ContactSubmissions,
-    SickReports,
-  ],
+  admin: { user: Users.slug },
+  collections: [Users, Media, NewsArticles, Events, GalleryAlbums, Pages, Staff, ContactSubmissions, SickReports],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
-  },
+  typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
-    push: true,
+    migrationDir: path.resolve(dirname, 'migrations'),
     pool: {
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: { rejectUnauthorized: false },
       max: 5,
       idleTimeoutMillis: 20000,
       connectionTimeoutMillis: 30000,
@@ -60,10 +51,7 @@ export default buildConfig({
     transportOptions: {
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || '',
-      },
+      auth: { user: process.env.SMTP_USER || '', pass: process.env.SMTP_PASS || '' },
     },
   }),
   plugins: [
@@ -74,9 +62,7 @@ export default buildConfig({
       generateDescription: ({ doc }: any) => doc?.excerpt?.value || '',
     }),
     s3Storage({
-      collections: {
-        media: true,
-      },
+      collections: { media: true },
       bucket: process.env.S3_BUCKET || '',
       config: {
         credentials: {
